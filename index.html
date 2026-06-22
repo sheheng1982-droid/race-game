@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
     <title>KI & Traffic Insider Game</title>
     <style>
-        /* Сброс базовых отступов и фиксация экрана от скролла */
+        /* Сброс отступов и жесткая фиксация экрана от скролла */
         html, body {
             margin: 0;
             padding: 0;
@@ -18,7 +18,7 @@
             box-sizing: border-box;
         }
 
-        /* Главный контейнер на весь экран */
+        /* Главный мобильный контейнер */
         .game-container {
             display: flex;
             flex-direction: column;
@@ -30,7 +30,7 @@
             box-sizing: border-box;
         }
 
-        /* Текст заголовка сверху */
+        /* Текст задания сверху */
         .headline {
             font-size: 15px;
             font-weight: bold;
@@ -42,7 +42,7 @@
             line-height: 1.3;
         }
 
-        /* Плашка таймера */
+        /* Округлая плашка таймера */
         .timer-badge {
             background-color: #00e5ff;
             color: #000000;
@@ -54,11 +54,11 @@
             box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
         }
 
-        /* ИСПРАВЛЕНО: Квадратное адаптивное игровое поле */
+        /* ИСПРАВЛЕНО: Идеальное квадратное игровое поле под телефоны */
         .canvas-container {
             width: 90%;
             max-width: 380px;
-            aspect-ratio: 1 / 1; /* Жестко делает контейнер идеальным квадратом */
+            aspect-ratio: 1 / 1;
             position: relative;
             border: 3px solid #00e5ff;
             border-radius: 20px;
@@ -73,7 +73,7 @@
             display: block;
         }
 
-        /* Экран старта внутри игрового поля */
+        /* Начальный экран «Bist du bereit?» */
         .start-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -116,7 +116,66 @@
             box-shadow: 0 4px 12px rgba(0, 255, 135, 0.3);
         }
 
-        /* ИСПРАВЛЕНО: Крупные удобные кнопки управления внизу экрана */
+        /* ИСПРАВЛЕНО: Всплывающее окно победы с вашей личной ссылкой */
+        .popup-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 7, 10, 0.95);
+            z-index: 20;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+
+        .popup-content {
+            background: linear-gradient(145deg, #181d26, #11151c);
+            border: 2px solid #00e5ff;
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
+            padding: 25px 20px;
+            border-radius: 20px;
+            text-align: center;
+            width: 100%;
+            max-width: 320px;
+            box-sizing: border-box;
+        }
+
+        .popup-title {
+            font-size: 24px;
+            color: #ffd700;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .popup-prize {
+            font-size: 15px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.03);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px dashed rgba(0, 229, 255, 0.4);
+            line-height: 1.4;
+        }
+
+        /* Кнопка перенаправления сразу к Александру в диалог */
+        .popup-btn {
+            display: block;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            color: #000000 !important;
+            padding: 15px 20px;
+            font-size: 13px;
+            font-weight: 900;
+            text-decoration: none;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Широкие удобные кнопки управления LINKS / RECHTS */
         .controls-container {
             display: flex;
             width: 90%;
@@ -140,7 +199,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            user-select: no;
+            user-select: none;
             -webkit-user-select: none;
         }
 
@@ -153,24 +212,34 @@
 <body>
 
     <div class="game-container">
-        <!-- Текст и таймер -->
         <div class="headline">Weiche den Hindernissen aus und fahre ins Ziel ein!</div>
         <div id="timerDisplay" class="timer-badge">Zeit: 10.0s</div>
 
-        <!-- Контейнер с квадратной игрой -->
         <div class="canvas-container">
-            <!-- Экран старта (исчезнет при клике) -->
+            <!-- Экран «Bist du bereit?» -->
             <div id="startOverlay" class="start-overlay">
                 <div class="start-title">Bist du bereit? 🏎</div>
                 <div class="start-desc">Weiche 10 Sekunden lang den Hindernissen aus, um deinen Bonus freizuschalten!</div>
                 <button id="startBtn" class="start-btn">SPIEL STARTEN</button>
             </div>
             
-            <!-- Игровой холст (матрица теперь тоже квадратная 400x400) -->
+            <!-- ИСПРАВЛЕНО: Окно выигрыша ведет в диалог к @AlexanderCryptoAl -->
+            <div id="popupOverlay" class="popup-overlay">
+                <div class="popup-content">
+                    <div class="popup-title">🎉 Glückwunsch!</div>
+                    <div class="popup-prize">
+                        Ihr Gewinn:<br>
+                        <strong style="color:#ffd700; font-size:20px;">20% ERSTEINZAHLUNGSBONUS</strong><br><br>
+                        <span style="font-size:12px; color:#ff4d4d;">Der Gutschein läuft ab in: 09:59</span>
+                    </div>
+                    <a href="https://t.me/AlexanderCryptoAl" class="popup-btn">RABATT IN TELEGRAM SICHERN</a>
+                </div>
+            </div>
+            
+            <!-- Матрица холста квадратная 400x400 -->
             <canvas id="gameCanvas" width="400" height="400"></canvas>
         </div>
 
-        <!-- Кнопки управления LINKS и RECHTS -->
         <div class="controls-container">
             <button id="btnLeft" class="control-btn">◀ LINKS</button>
             <button id="btnRight" class="control-btn">RECHTS ▶</button>
@@ -178,10 +247,10 @@
     </div>
 
     <script>
-        // Ниже встроена базовая логика игры для проверки физики и адаптива
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const startOverlay = document.getElementById('startOverlay');
+        const popupOverlay = document.getElementById('popupOverlay');
         const startBtn = document.getElementById('startBtn');
         const timerDisplay = document.getElementById('timerDisplay');
         const btnLeft = document.getElementById('btnLeft');
@@ -189,54 +258,45 @@
 
         let gameActive = false;
         let timeLeft = 10.0;
-        let carX = 175; // Начальная позиция машинки по центру (холст 400px)
-        const carY = 300;
+        
+        // Размеры и позиция спортивной машинки игрока
+        let carX = 175;
+        const carY = 295;
         const carWidth = 50;
-        const carHeight = 80;
+        const carHeight = 85;
 
-        // Обработка старта игры
+        // Массив препятствий
+        let obstacles = [];
+        let obstacleTimer = 0;
+        let lineY = 0;
+
         startBtn.addEventListener('click', () => {
             startOverlay.style.display = 'none';
             gameActive = true;
+            timeLeft = 10.0;
+            obstacles = [];
+            carX = 175;
             startGameLoop();
         });
 
-        // Кнопки управления (Изменяют координату X машинки)
-        btnLeft.addEventListener('pointerdown', () => { if(gameActive && carX > 20) carX -= 35; });
-        btnRight.addEventListener('pointerdown', () => { if(gameActive && carX < 330) carX += 35; });
+        // Отслеживание кликов по кнопкам LINKS / RECHTS
+        btnLeft.addEventListener('pointerdown', () => { if(gameActive && carX > 40) carX -= 65; });
+        btnRight.addEventListener('pointerdown', () => { if(gameActive && carX < 310) carX += 65; });
 
-        // Простой цикл отрисовки для демонстрации
-        function startGameLoop() {
-            if (!gameActive) return;
-
-            // Очистка и прорисовка фона дороги
-            ctx.fillStyle = '#090d14';
-            ctx.fillRect(0, 0, 400, 400);
-
-            // Разделительная линия
-            ctx.strokeStyle = '#ffffff';
-            ctx.setLineDash([20, 20]);
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(200, 0);
-            ctx.lineTo(200, 400);
-            ctx.stroke();
-
-            // Машинка (Голубой прямоугольник вместо графики для примера)
-            ctx.fillStyle = '#00e5ff';
-            ctx.fillRect(carX, carY, carWidth, carHeight);
-
-            // Обратный отсчет таймера
-            if (timeLeft > 0) {
-                timeLeft -= 0.02;
-                timerDisplay.innerText = `Zeit: ${Math.max(0, timeLeft).toFixed(1)}s`;
-                requestAnimationFrame(startGameLoop);
-            } else {
-                gameActive = false;
-                timerDisplay.innerText = "Ziel erreicht! 🎉";
-                // Сюда можно вписать перенаправление или открытие попапа с бонусом
-            }
+        function spawnObstacle() {
+            const lanes =; // Координаты трех полос движения
+            const randomLane = lanes[Math.floor(Math.random() * lanes.length)];
+            obstacles.push({
+                x: randomLane,
+                y: -40,
+                width: 50,
+                height: 30,
+                speed: 6
+            });
         }
-    </script>
-</body>
-</html>
+
+        // Отрисовка детализированной машинки игрока
+        function drawPlayerCar(x, y) {
+            ctx.fillStyle = '#00d2ff'; // Голубой корпус
+            ctx.fillRect(x, y + 15, carWidth, carHeight - 30);
+            ctx.fillStyle = '#0088cc'; // Задний спойлер
