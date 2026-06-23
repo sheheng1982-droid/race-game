@@ -1,385 +1,230 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
-    <title>KI & Traffic Insider Game</title>
-    <style>
-        /* Полная фиксация экрана от скролла и свайпов iOS */
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #0b0e14;
-            color: #ffffff;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            overflow: hidden;
-            box-sizing: border-box;
-            touch-action: none; 
-            -webkit-overflow-scrolling: none;
-        }
+<!-- 1. ПОДКЛЮЧАЕМ ОФИЦИАЛЬНУЮ БИБЛИОТЕКУ TELEGRAM (ОБЯЗАТЕЛЬНЫЙ ХВОСТИК ДЛЯ ТЕЛЕФОНОВ) -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-        /* Главный контейнер */
-        .game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            padding: 15px;
-            box-sizing: border-box;
-        }
-
-        /* Заголовок */
-        .headline {
-            font-size: 15px;
-            font-weight: bold;
-            text-align: center;
-            color: #00e5ff;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
-            max-width: 90%;
-            line-height: 1.3;
-        }
-
-        /* Таймер */
-        .timer-badge {
-            background-color: #00e5ff;
-            color: #000000;
-            font-weight: bold;
-            padding: 6px 24px;
-            border-radius: 20px;
-            font-size: 16px;
-            margin-bottom: 15px;
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
-        }
-
-        /* Идеал под экраны смартфонов */
-        .canvas-container {
-            width: 90%;
-            max-width: 380px;
-            aspect-ratio: 1 / 1;
-            position: relative;
-            border: 3px solid #00e5ff;
-            border-radius: 20px;
-            box-shadow: 0 0 25px rgba(0, 229, 255, 0.25);
-            background-color: #090d14;
-            overflow: hidden;
-        }
-
-        #gameCanvas {
-            width: 100% !important;
-            height: 100% !important;
-            display: block;
-        }
-
-        /* Начальный экран */
-        .start-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(11, 14, 20, 0.95);
-            z-index: 10;
-            padding: 20px;
-            box-sizing: border-box;
-            text-align: center;
-        }
-
-        .start-title {
-            color: #00e5ff;
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .start-desc {
-            font-size: 13px;
-            line-height: 1.4;
-            color: #cccccc;
-            margin-bottom: 20px;
-            max-width: 260px;
-        }
-
-        .start-btn {
-            background: linear-gradient(90deg, #00ff87 0%, #60efff 100%);
-            color: #000000;
-            border: none;
-            padding: 14px 40px;
-            font-size: 16px;
-            font-weight: bold;
-            text-transform: uppercase;
-            border-radius: 25px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 255, 135, 0.3);
-            touch-action: manipulation; 
-        }
-
-        /* Окно победы */
-        .popup-overlay {
-            display: none;
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5, 7, 10, 0.95);
-            z-index: 20;
-            align-items: center;
-            justify-content: center;
-            box-sizing: border-box;
-            padding: 20px;
-        }
-
-        .popup-content {
-            background: linear-gradient(145deg, #181d26, #11151c);
-            border: 2px solid #00e5ff;
-            box-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
-            padding: 25px 20px;
-            border-radius: 20px;
-            text-align: center;
-            width: 100%;
-            max-width: 320px;
-            box-sizing: border-box;
-        }
-
-        .popup-title {
-            font-size: 24px;
-            color: #ffd700;
-            font-weight: bold;
-            margin-bottom: 12px;
-        }
-
-        .popup-prize {
-            font-size: 15px;
-            font-weight: bold;
-            color: #ffffff;
-            margin-bottom: 20px;
-            background: rgba(255,255,255,0.03);
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px dashed rgba(0, 229, 255, 0.4);
-            line-height: 1.4;
-        }
-
-        /* Ссылка на личку к Александру */
-        .popup-btn {
-            display: block;
-            background: linear-gradient(90deg, #2ecc71, #27ae60);
-            color: #000000 !important;
-            padding: 15px 20px;
-            font-size: 13px;
-            font-weight: 900;
-            text-decoration: none;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Кнопки LINKS / RECHTS */
-        .controls-container {
-            display: flex;
-            width: 90%;
-            max-width: 380px;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .control-btn {
-            flex: 1;
-            background: #00e5ff;
-            border: none;
-            color: #000000;
-            padding: 15px 0;
-            font-weight: bold;
-            font-size: 15px;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);
-            text-transform: uppercase;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: manipulation;
-        }
-
-        .control-btn:active {
-            background: #00b2cc;
-            transform: scale(0.98);
-        }
-    </style>
-</head>
-<body>
-
-    <div class="game-container">
-        <div class="headline">Weiche den Hindernissen aus und fahre ins Ziel ein!</div>
-        <div id="timerDisplay" class="timer-badge">Zeit: 10.0s</div>
-
-        <div class="canvas-container">
-            <div id="startOverlay" class="start-overlay">
-                <div class="start-title">Bist du bereit? 🏎</div>
-                <div class="start-desc">Weiche 10 Sekunden lang den Hindernissen aus, um deinen Bonus freizuschalten!</div>
-                <button id="startBtn" class="start-btn">SPIEL STARTEN</button>
-            </div>
-            
-            <div id="popupOverlay" class="popup-overlay">
-                <div class="popup-content">
-                    <div class="popup-title">🎉 Glückwunsch!</div>
-                    <div class="popup-prize">
-                        Ihr Gewinn:<br>
-                        <strong style="color:#ffd700; font-size:20px;">20% ERSTEINZAHLUNGSBONUS</strong><br><br>
-                        <span style="font-size:12px; color:#ff4d4d;">Der Gutschein läuft ab in: 09:59</span>
-                    </div>
-                    <a href="https://t.me/AlexanderCryptoAl" class="popup-btn">RABATT IN TELEGRAM SICHERN</a>
-                </div>
-            </div>
-            
-            <canvas id="gameCanvas" width="400" height="400"></canvas>
-        </div>
-
-        <div class="controls-container">
-            <button id="btnLeft" class="control-btn">◀ LINKS</button>
-            <button id="btnRight" class="control-btn">RECHTS ▶</button>
-        </div>
+<div class="race-wrapper">
+  <div class="race-title">Weiche den Hindernissen aus und fahre ins Ziel ein!</div>
+  <div class="race-timer">Zeit: <span id="timerText">10.0</span>s</div>
+  
+  <div class="race-container" id="raceArea">
+    <!-- Динамическая разметка дороги -->
+    <div class="road-lines" id="roadLines"></div>
+    
+    <!-- Стартовый экран-заставка -->
+    <div class="start-overlay" id="startScreen">
+      <h2>Bist du bereit? 🏎️</h2>
+      <p>Weiche 10 Sekunden lang den Hindernissen aus, um deinen Bonus freizuschalten!</p>
+      <button class="start-game-btn" id="startBtn">SPIEL STARTEN</button>
     </div>
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const startOverlay = document.getElementById('startOverlay');
-        const popupOverlay = document.getElementById('popupOverlay');
-        const startBtn = document.getElementById('startBtn');
-        const timerDisplay = document.getElementById('timerDisplay');
-        const btnLeft = document.getElementById('btnLeft');
-        const btnRight = document.getElementById('btnRight');
 
-        let gameActive = false;
-        let timeLeft = 10.0;
-        
-        let carX = 175;
-        const carY = 295;
-        const carWidth = 50;
-        const carHeight = 85;
+    <!-- Реалистичный спортивный болид -->
+    <div class="car-topview" id="heroCar">
+      <div class="car-shadow"></div>
+      <div class="car-body">
+        <div class="racing-stripes"></div>
+        <div class="car-cockpit">
+          <div class="windshield"></div>
+          <div class="driver-helmet"></div>
+        </div>
+        <div class="spoiler-front-wing"></div>
+        <div class="spoiler-rear-wing"></div>
+        <div class="wheel-formula f-l"></div>
+        <div class="wheel-formula f-r"></div>
+        <div class="wheel-formula b-l"></div>
+        <div class="wheel-formula b-r"></div>
+        <div class="exhaust-pipes ext-l"></div>
+        <div class="exhaust-pipes ext-r"></div>
+      </div>
+    </div>
+  </div>
+  <div class="race-controls">
+    <button class="race-btn" id="leftBtn">◀ LINKS</button>
+    <button class="race-btn" id="rightBtn">RECHTS ▶</button>
+  </div>
+</div>
 
-        let obstacles = [];
-        let obstacleTimer = 0;
-        let lineY = 0;
+<div class="modal-overlay" id="raceModal">
+  <div class="modal-box">
+    <h3>Ziel erreicht! 🏆</h3>
+    <p>Ihr Gewinn: <strong id="racePrizeText" style="color:#00f2fe; font-size:20px; display:block; margin-top:5px; text-shadow: 0 0 10px rgba(0,242,254,0.5);"></strong></p>
+    <p class="timer">Der Gutschein läuft ab in: <span id="raceCountdown">15:00</span></p>
+    
+    <!-- ДВЕ ЧИСТЫЕ БЕЗОПАСНЫЕ КНОПКИ ДЛЯ ТЕЛЕФОНОВ -->
+    <a href="#" id="tgFinalLink" class="tg-redirect-btn">🎁 BONUS SICHERN (PM)</a>
+    <a href="#" id="tgChannelLink" class="tg-redirect-btn" style="background: linear-gradient(135deg, #00f2fe, #4facfe); margin-top: 10px;">🚀 VIP-KANAL BEITRETEN</a>
+  </div>
+</div>
+<style>
+html, body { touch-action: manipulation; -webkit-text-size-adjust: 100%; overscroll-behavior-y: contain; }
+.race-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Segoe UI', Roboto, sans-serif; padding: 20px 10px; background: #070714; color: #fff; min-height: 85vh; box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: none; }
+.race-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; text-align: center; max-width: 90%; color: #00f2fe; text-shadow: 0 0 10px #00f2fe; line-height: 1.4; }
+.race-timer { font-size: 22px; font-weight: bold; margin-bottom: 15px; background: linear-gradient(135deg, #00f2fe, #4facfe); color: #070714; padding: 6px 25px; border-radius: 20px; box-shadow: 0 0 15px rgba(0, 242, 254, 0.5); }
+.race-container { position: relative; width: 95vw; max-width: 450px; height: 65vh; background: #1a1a2e; border: 4px solid #4facfe; border-radius: 12px; overflow: hidden; box-shadow: 0 0 25px rgba(79, 172, 254, 0.3); }
+.road-lines { position: absolute; width: 100%; height: 200%; top: -100%; left: 0; background-image: linear-gradient(to bottom, transparent 0%, transparent 50%, #3a3a5c 50%, #3a3a5c 100%); background-size: 10px 40px; background-repeat: repeat-y; background-position: center; z-index: 1; }
+.road-lines.moving { animation: scrollRoad 0.4s linear infinite; }
+@keyframes scrollRoad { 0% { transform: translateY(0); } 100% { transform: translateY(40px); } }
+.start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7, 7, 20, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 20px; text-align: center; box-sizing: border-box; }
+.start-overlay h2 { font-size: 24px; margin-bottom: 10px; color: #00f2fe; text-shadow: 0 0 8px #00f2fe; }
+.start-overlay p { font-size: 14px; color: #ccc; line-height: 1.5; margin-bottom: 25px; }
+.start-game-btn { background: #2ed573; color: #fff; border: none; padding: 14px 28px; font-size: 16px; font-weight: bold; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 15px rgba(46, 213, 115, 0.4); transition: 0.2s; }
+.obstacle { position: absolute; font-size: 28px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; z-index: 2; }
+.car-topview { position: absolute; bottom: 20px; left: 45%; width: 40px; height: 80px; z-index: 5; transition: left 0.05s ease-out; }
+.car-shadow { position: absolute; top: 5px; left: 5px; width: 100%; height: 100%; background: rgba(0,0,0,0.4); border-radius: 8px; filter: blur(4px); z-index: -1; }
+.car-body { position: absolute; width: 100%; height: 100%; background: #00f2fe; border-radius: 12px 12px 6px 6px; box-shadow: 0 0 15px rgba(0, 242, 254, 0.6); overflow: visible; }
+.racing-stripes { position: absolute; left: 45%; width: 10%; height: 100%; background: #fff; opacity: 0.8; }
+.car-cockpit { position: absolute; top: 30%; left: 22%; width: 56%; height: 28%; background: #070714; border-radius: 50% 50% 20% 20%; border: 1px solid #4facfe; }
+.windshield { position: absolute; top: 10%; left: 15%; width: 70%; height: 40%; background: rgba(255,255,255,0.4); border-radius: 50% 50% 0 0; }
+.driver-helmet { position: absolute; bottom: 10%; left: 35%; width: 30%; height: 40%; background: #ff4757; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+.spoiler-front-wing { position: absolute; top: -4px; left: -4px; width: 48px; height: 6px; background: #4facfe; border-radius: 2px; }
+.spoiler-rear-wing { position: absolute; bottom: -4px; left: -6px; width: 52px; height: 8px; background: #4facfe; border-radius: 2px; }
+.wheel-formula { position: absolute; width: 8px; height: 18px; background: #111; border-radius: 3px; border-left: 2px solid #333; border-right: 2px solid #333; }
+.f-l { top: 15%; left: -6px; } .f-r { top: 15%; right: -6px; }
+.b-l { bottom: 15%; left: -6px; } .b-r { bottom: 15%; right: -6px; }
+.exhaust-pipes { position: absolute; bottom: -8px; width: 3px; height: 8px; background: #888; border-radius: 1px; }
+.ext-l { left: 8px; } .ext-r { right: 8px; }
+.race-controls { display: flex; gap: 15px; margin-top: 20px; width: 100%; max-width: 450px; }
+.race-btn { flex: 1; background: linear-gradient(135deg, #00f2fe, #4facfe); color: #070714; border: none; padding: 16px; font-weight: bold; font-size: 16px; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3); -webkit-tap-highlight-color: transparent; }
+.modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(5, 5, 15, 0.96); display: none; align-items: center; justify-content: center; z-index: 9999; }
+.modal-box { background: #12122c; padding: 35px 25px; border-radius: 15px; text-align: center; color: #fff; border: 2px solid #00f2fe; max-width: 90%; width: 320px; box-shadow: 0 0 30px rgba(0, 242, 254, 0.4); }
+.modal-box h3 { font-size: 26px; margin-bottom: 10px; color: #00f2fe; text-shadow: 0 0 10px #00f2fe; }
+.timer { color: #ffa502; font-size: 14px; margin: 15px 0; }
+.tg-redirect-btn { display: block; background: #00f2fe; color: #0a0a16; text-decoration: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 15px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0, 242, 254, 0.5); text-transform: uppercase; letter-spacing: 0.5px; }
+</style>
+<script>
+// ===================================================================
+// НАСТОЯЩИЕ ИСПРАВЛЕННЫЕ ССЫЛКИ СО ВСЕМИ СЛЭШАМИ И БУКВАМИ:
+const BOT_USERNAME = "AlexanderCryptoAl"; 
+const TELEGRAM_LINK = "https://t.me/" + BOT_USERNAME; // Ваша личка
 
-        function handleStart() {
-            startOverlay.style.display = 'none';
-            popupOverlay.style.display = 'none';
-            gameActive = true;
-            timeLeft = 10.0;
-            obstacles = [];
-            carX = 175;
-            obstacleTimer = 0;
-            startGameLoop();
-        }
+const CHANNEL_LINK = "https://t.me/+KnLzkr7tZftmZDEx"; // Ваша ссылка на канал
+// ===================================================================
 
-        // Клик старта для мобильных устройств и ПК
-        startBtn.addEventListener('click', handleStart);
-        startBtn.addEventListener('touchstart', (e) => { e.preventDefault(); handleStart(); }, { passive: false });
+if (window.Telegram && window.Telegram.WebApp) { 
+    window.Telegram.WebApp.ready(); 
+}
 
-        // Тапы для iOS (управление срабатывает мгновенно)
-        btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); if(gameActive && carX > 40) carX -= 65; }, { passive: false });
-        btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); if(gameActive && carX < 310) carX += 65; }, { passive: false });
-        
-        // Клики мышкой для ПК-версии
-        btnLeft.addEventListener('mousedown', () => { if(gameActive && carX > 40) carX -= 65; });
-        btnRight.addEventListener('mousedown', () => { if(gameActive && carX < 310) carX += 65; });
+document.addEventListener('touchstart', function(e) { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+const car = document.getElementById('heroCar');
+const raceArea = document.getElementById('raceArea');
+const roadLines = document.getElementById('roadLines');
+const timerText = document.getElementById('timerText');
+const raceModal = document.getElementById('raceModal');
+const prizeText = document.getElementById('racePrizeText');
+const startScreen = document.getElementById('startScreen');
+const startBtn = document.getElementById('startBtn');
+const tgFinalLink = document.getElementById('tgFinalLink');
 
-        function spawnObstacle() {
-            // ИСПРАВЛЕНО: Прописаны 3 точные дорожные полосы
-            const lanes = [45, 175, 305]; 
-            const randomLane = lanes[Math.floor(Math.random() * lanes.length)];
-            obstacles.push({
-                x: randomLane,
-                y: -40,
-                width: 50,
-                height: 30,
-                speed: 6
-            });
-        }
+let carX = 130;
+const areaWidth = 300;
+const carWidth = 40; 
+let timeLeft = 10.0;
+let raceActive = false; 
+let gameIntervals = [];
+let isHoldingLeft = false;
+let isHoldingRight = false;
 
-        function drawPlayerCar(x, y) {
-            ctx.fillStyle = '#00d2ff'; 
-            ctx.fillRect(x, y + 15, carWidth, carHeight - 30);
-            ctx.fillStyle = '#0088cc'; 
-            ctx.fillRect(x - 4, y + carHeight - 20, carWidth + 8, 10);
-            ctx.fillStyle = '#222222'; 
-            ctx.fillRect(x - 5, y + 15, 6, 16);
-            ctx.fillRect(x + carWidth, y + 15, 6, 16);
-            ctx.fillRect(x - 5, y + carHeight - 30, 6, 16);
-            ctx.fillRect(x + carWidth, y + carHeight - 30, 6, 16);
-            ctx.fillStyle = '#111111'; 
-            ctx.fillRect(x + 6, y + 32, carWidth - 12, 16);
-            ctx.fillStyle = '#ff4d4d'; 
-            ctx.fillRect(x + 4, y + carHeight - 12, 8, 4);
-            ctx.fillRect(x + carWidth - 12, y + carHeight - 12, 8, 4);
-        }
+// Логика кнопки 1: Переход в личку к Александру
+tgFinalLink.addEventListener('click', function(e) {
+    e.preventDefault(); 
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+        window.Telegram.WebApp.openTelegramLink(TELEGRAM_LINK);
+    } else {
+        window.open(TELEGRAM_LINK, '_blank');
+    }
+});
 
-        function drawObstacle(x, y, w, h) {
-            ctx.fillStyle = '#ff6b6b'; 
-            ctx.fillRect(x, y, w, h);
-            ctx.fillStyle = '#ffffff'; 
-            ctx.fillRect(x + 10, y, 10, h);
-            ctx.fillRect(x + 30, y, 10, h);
-            ctx.fillStyle = '#333333'; 
-            ctx.fillRect(x, y + h, 8, 6);
-            ctx.fillRect(x + w - 8, y + h, 8, 6);
-        }
+// Логика кнопки 2: Переход на ваш канал
+document.getElementById('tgChannelLink').addEventListener('click', function(e) {
+    e.preventDefault(); 
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+        window.Telegram.WebApp.openTelegramLink(CHANNEL_LINK);
+    } else {
+        window.open(CHANNEL_LINK, '_blank');
+    }
+});
 
-        function startGameLoop() {
-            if (!gameActive) return;
+startBtn.addEventListener('click', function() {
+  startScreen.style.display = 'none'; 
+  roadLines.classList.add('moving');
+  raceActive = true;                  
+  runGameEngines();                   
+});
 
-            ctx.fillStyle = '#111622';
-            ctx.fillRect(0, 0, 400, 400);
+function runGameEngines() {
+  const moveLoop = setInterval(() => {
+    if (!raceActive) return;
+    if (isHoldingLeft && carX > 5) { carX -= 6; car.style.left = carX + 'px'; }
+    if (isHoldingRight && carX < (areaWidth - carWidth - 5)) { carX += 6; car.style.left = carX + 'px'; }
+  }, 20);
+  gameIntervals.push(moveLoop);
 
-            ctx.fillStyle = '#00e5ff';
-            ctx.fillRect(0, 0, 15, 400);
-            ctx.fillRect(385, 0, 15, 400);
+  const timerLoop = setInterval(() => {
+    if (!raceActive) return;
+    timeLeft -= 0.1;
+    if (timeLeft <= 0) { timeLeft = 0; endGame(true); }
+    timerText.textContent = timeLeft.toFixed(1);
+  }, 100);
+  gameIntervals.push(timerLoop);
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-            ctx.lineWidth = 4;
-            ctx.setLineDash([]);
-            lineY += 7;
-            if(lineY > 20) lineY = 0;
+  const obstacleLoop = setInterval(() => { if (!raceActive) return; createObstacle(); }, 600);
+  gameIntervals.push(obstacleLoop);
 
-            ctx.beginPath(); ctx.moveTo(133, 0); ctx.lineTo(133, 400); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(266, 0); ctx.lineTo(266, 400); ctx.stroke();
+  const collisionLoop = setInterval(() => { if (!raceActive) return; checkCollisions(); }, 50);
+  gameIntervals.push(collisionLoop);
+}
 
-            obstacleTimer++;
-            if (obstacleTimer % 40 === 0) {
-                spawnObstacle();
-            }
+function createObstacle() {
+  const obs = document.createElement('div');
+  obs.classList.add('obstacle');
+  obs.innerHTML = '🚧'; 
+  const randomX = Math.floor(Math.random() * (areaWidth - 40));
+  obs.style.left = randomX + 'px'; obs.style.top = '-40px';
+  raceArea.appendChild(obs);
+  let obsY = -40;
+  const obsMove = setInterval(() => {
+    if (!raceActive) { clearInterval(obsMove); obs.remove(); return; }
+    obsY += 7; obs.style.top = obsY + 'px';
+    if (obsY > 400) { clearInterval(obsMove); obs.remove(); }
+  }, 20);
+}
 
-            for (let i = 0; i < obstacles.length; i++) {
-                let obs = obstacles[i];
-                obs.y += obs.speed;
-                drawObstacle(obs.x, obs.y, obs.width, obs.height);
+function checkCollisions() {
+  const obstacles = document.querySelectorAll('.obstacle');
+  const carRect = car.getBoundingClientRect();
+  obstacles.forEach(obs => {
+    const obsRect = obs.getBoundingClientRect();
+    if (!(carRect.right < obsRect.left || carRect.left > obsRect.right || carRect.bottom < obsRect.top || carRect.top > obsRect.bottom)) { endGame(false); }
+  });
+}
 
-                if (obs.x < carX + carWidth && obs.x + obs.width > carX &&
-                    obs.y < carY + carHeight && obs.y + obs.height > carY) {
-                    obs.y = -120; 
-                }
-            }
+function endGame(isWin) {
+  raceActive = false; roadLines.classList.remove('moving');
+  gameIntervals.forEach(clearInterval); gameIntervals = [];
+  if (isWin) {
+    const randomBonus = Math.random() < 0.5 ? "10%" : "15%";
+    prizeText.textContent = `+${randomBonus} BONUS AUF DIE ERSTE EINZAHLUNG`;
+    raceModal.style.display = 'flex'; startCountdownModal();
+  } else {
+    alert("Du bist crashed! Versuche es noch einmal! 💥");
+    document.querySelectorAll('.obstacle').forEach(o => o.remove());
+    timeLeft = 10.0; timerText.textContent = '10.0'; carX = 130; car.style.left = carX + 'px';
+    raceActive = true; roadLines.classList.add('moving'); runGameEngines();
+  }
+}
 
-            obstacles = obstacles.filter(obs => obs.y < 450);
-            drawPlayerCar(carX, carY);
+function startCountdownModal() {
+  let duration = 15 * 60; const display = document.getElementById('raceCountdown');
+  const modalTimer = setInterval(() => {
+    let minutes = Math.floor(duration / 60); let seconds = duration % 60;
+    minutes = minutes < 10 ? "0" + minutes : minutes; seconds = seconds < 10 ? "0" + seconds : seconds;
+    display.textContent = minutes + ":" + seconds; if (--duration < 0) clearInterval(modalTimer);
+  }, 100);
+}
 
-            if (timeLeft > 0) {
-                timeLeft -= 0.02;
-                timerDisplay.innerText = `Zeit: ${Math.max(0, timeLeft).toFixed(1)}s`;
-                requestAnimationFrame(startGameLoop);
-            } else {
-                gameActive = false;
-                timerDisplay.innerText = "Ziel erreicht! 🎉";
-                popupOverlay.style.display = 'flex'; 
-            }
-        }
-    </script>
-</body>
-</html>
+const leftBtn = document.getElementById('leftBtn'); const rightBtn = document.getElementById('rightBtn');
+leftBtn.addEventListener('mousedown', () => isHoldingLeft = true); leftBtn.addEventListener('mouseup', () => isHoldingLeft = false);
+leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isHoldingLeft = true; }); leftBtn.addEventListener('touchend', () => isHoldingLeft = false);
+rightBtn.addEventListener('mousedown', () => isHoldingRight = true); rightBtn.addEventListener('mouseup', () => isHoldingRight = false);
+rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isHoldingRight = true; }); rightBtn.addEventListener('touchend', () => isHoldingRight = false);
+document.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') isHoldingLeft = true; if (e.key === 'ArrowRight') isHoldingRight = true; });
+document.addEventListener('keyup', (e) => { if (e.key === 'ArrowLeft') isHoldingLeft = false; if (e.key === 'ArrowRight') isHoldingRight = false; });
+</script>
