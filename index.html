@@ -293,7 +293,7 @@
 
         function spawnObstacle() {
             // ИСПРАВЛЕНО: Прописаны 3 точные дорожные полосы
-            const lanes =; 
+            const lanes = [45, 175, 305]; 
             const randomLane = lanes[Math.floor(Math.random() * lanes.length)];
             obstacles.push({
                 x: randomLane,
